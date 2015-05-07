@@ -57,9 +57,10 @@ function paso_montecarlo(m::MicroEstado, β::Float64)
 
     if rand() < α
         voltea_espin!(m, i, j)
-        return ΔE
+		ΔM = -2*m.σ[i,j]
+        return ΔE, ΔM
     else
-        return 0.
+        return 0., 0.
     end
 end
 
@@ -82,7 +83,7 @@ function montecarlo_energia(L::Int, T::Float64, num_pasos::Int)
     sizehint(out, num_pasos)
 
     for i in 1:num_pasos-1
-        ΔE = paso_montecarlo(m, β)
+        ΔE = paso_montecarlo(m, β)[1]
         push!(out, out[i] + ΔE)
     end
 
@@ -99,8 +100,8 @@ function montecarlo_magnetizacion(L::Int, T::Float64, num_pasos::Int)
     sizehint(out, num_pasos)
 
     for i in 1:num_pasos-1
-        paso_montecarlo(m, β)
-        push!(out, magnetizacion(m))
+        ΔM = paso_montecarlo(m, β)[2]
+        push!(out, out[i] + ΔM)
     end
 
     out
