@@ -2,7 +2,7 @@
 
 module Ising
 
-export MicroEstado, edo_aleatorio, simulacion_montecarlo, montecarlo_energia, monte
+export MicroEstado, edo_aleatorio, simulacion_montecarlo, montecarlo_energia, montecarlo_magnetizacion
 export voltea_espin!, energia_total, energia_ij, propone_cambio, paso_montecarlo
 import Base.show
 
