@@ -39,7 +39,7 @@ end
 
 function energia_ij(m::MicroEstado, i::Int, j::Int)
 	L = m.L
-	-0.5 * m.σ[i,j]*(m.σ[mod1(i-1,L),j] + m.σ[mod1(i+1,L),j] + m.σ[i,mod1(j-1,L)] + m.σ[i,mod1(j+1,L)])
+	-m.σ[i,j]*(m.σ[mod1(i-1,L),j] + m.σ[mod1(i+1,L),j] + m.σ[i,mod1(j-1,L)] + m.σ[i,mod1(j+1,L)])
 end
 
 function propone_cambio(m::MicroEstado, β::Float64)
@@ -64,16 +64,16 @@ function paso_montecarlo(m::MicroEstado, β::Float64)
     end
 end
 
-function simulacion_montecarlo(L::Int, T::Float64, num_pasos::Int)
-	β = 1/T
-	m = edo_aleatorio(L)
+# function simulacion_montecarlo(L::Int, T::Float64, num_pasos::Int)
+# 	β = 1/T
+# 	m = edo_aleatorio(L)
 
-	for i in 1:num_pasos
-		paso_montecarlo(m,β)
-	end
+# 	for i in 1:num_pasos-1
+# 		paso_montecarlo(m,β)
+# 	end
 
-	m
-end
+# 	m
+# end
 
 function montecarlo_energia(L::Int, T::Float64, num_pasos::Int)
 	β = 1/T
@@ -90,13 +90,13 @@ function montecarlo_energia(L::Int, T::Float64, num_pasos::Int)
     out
 end
 
-magnetizacion(m::MicroEstado) = sum(m.σ)
+magnetizacion_total(m::MicroEstado) = sum(m.σ)
 
 function montecarlo_magnetizacion(L::Int, T::Float64, num_pasos::Int)
     β = 1/T
 	m = edo_aleatorio(L)
 
-    out = [magnetizacion(m)]
+    out = [magnetizacion_total(m)]
     sizehint(out, num_pasos)
 
     for i in 1:num_pasos-1
@@ -107,7 +107,23 @@ function montecarlo_magnetizacion(L::Int, T::Float64, num_pasos::Int)
     out
 end
 
+function simulacion_montecarlo(L::Int, T::Float64, num_pasos::Int)
+	β = 1/T
+	m = edo_aleatorio(L)
 
+	ener = Array(Float64, num_pasos)
+	ener[1] = energia_total(m)
+	mag = Array(Float64, num_pasos)
+	mag[1] = magnetizacion_total(m)
+
+	for i in 1:num_pasos-1
+		ΔE, ΔM = paso_montecarlo(m, β)
+		ener[i+1] = ener[i] + ΔE
+		mag[i+1] = mag[i] + ΔM
+	end
+
+	ener, mag
+end
 
 # function microestados(n :: Int64, m :: Int64)
 #     N=n*m
