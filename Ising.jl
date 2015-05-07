@@ -64,7 +64,7 @@ function paso_montecarlo(m::MicroEstado, β::Float64)
     end
 end
 
-# function simulacion_montecarlo(L::Int, T::Float64, num_pasos::Int)
+# function simulacion_montecarlo(L::Int, T, num_pasos::Int)
 # 	β = 1/T
 # 	m = edo_aleatorio(L)
 
@@ -75,7 +75,7 @@ end
 # 	m
 # end
 
-function montecarlo_energia(L::Int, T::Float64, num_pasos::Int)
+function montecarlo_energia(L::Int, T, num_pasos::Int)
 	β = 1/T
 	m = edo_aleatorio(L)
 
@@ -92,7 +92,7 @@ end
 
 magnetizacion_total(m::MicroEstado) = sum(m.σ)
 
-function montecarlo_magnetizacion(L::Int, T::Float64, num_pasos::Int)
+function montecarlo_magnetizacion(L::Int, T, num_pasos::Int)
     β = 1/T
 	m = edo_aleatorio(L)
 
@@ -107,7 +107,7 @@ function montecarlo_magnetizacion(L::Int, T::Float64, num_pasos::Int)
     out
 end
 
-function simulacion_montecarlo(L::Int, T::Float64, num_pasos::Int)
+function simulacion_montecarlo(L::Int, T, num_pasos::Int)
 	β = 1/T
 	m = edo_aleatorio(L)
 
