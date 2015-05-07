@@ -52,12 +52,12 @@ end
 function paso_montecarlo(m::MicroEstado, β::Float64)
 	ΔE, i, j = propone_cambio(m, β)
 
-	#El parámetro 	de aceptación
+	#El parámetro de aceptación
 	α = min(1., e^(-β*ΔE))
 
     if rand() < α
-        voltea_espin!(m, i, j)
 		ΔM = -2*m.σ[i,j]
+        voltea_espin!(m, i, j)
         return ΔE, ΔM
     else
         return 0., 0.
