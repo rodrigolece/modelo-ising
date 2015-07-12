@@ -1,14 +1,14 @@
-## Implimentación del modelo de Ising con el algoritmo de Metropolis ##
+## Implimentación del modelo de Ising con el algoritmo de Metropolis-Hastings ##
 
 module Ising
 
-export MicroEstado, edo_aleatorio, simulacion_montecarlo, montecarlo_energia, montecarlo_magnetizacion
-export voltea_espin!, energia_total, energia_ij, propone_cambio, paso_montecarlo
+export MicroEstado, edo_aleatorio, energia_total, magnetizacion_total, simulacion_montecarlo
+export microEstados_montecarlo
 import Base.show
 
 type MicroEstado
     σ::Array{Int,2}
-	#Vamos a suponer que todas las configuraciones son cuadradas
+	# Vamos a suponer que todas las configuraciones son cuadradas
     L::Int
 end
 
@@ -30,9 +30,8 @@ end
 
 function energia_total(m::MicroEstado)
 	out = 0.
-	L = m.L
-    for i in 1:L, j in L
-		out -= m.σ[i,j]*(m.σ[mod1(i-1,L),j] + m.σ[mod1(i+1,L),j] + m.σ[i,mod1(j-1,L)] + m.σ[i,mod1(j+1,L)])
+    for i in 1:m.L, j in m.L
+		out += energia_ij(m,i,j)
     end
     out/2
 end
@@ -43,24 +42,27 @@ function energia_ij(m::MicroEstado, i::Int, j::Int)
 end
 
 function propone_cambio(m::MicroEstado, β::Float64)
-    i, j = rand(1:m.L), rand(1:m.L)  #Es más rápido que rand(1:m.L, 2)
+    i, j = rand(1:m.L), rand(1:m.L)  # Es más rápido que rand(1:m.L, 2)
 	ΔE = -2*energia_ij(m, i, j)
 
 	ΔE, i, j
 end
 
-function paso_montecarlo(m::MicroEstado, β::Float64)
-	ΔE, i, j = propone_cambio(m, β)
+function paso_montecarlo!(m::MicroEstado, β::Float64)
+	aceptado = false
 
-	#El parámetro de aceptación
-	α = min(1., e^(-β*ΔE))
+	while aceptado == false
+		ΔE, i, j = propone_cambio(m, β)
 
-    if rand() < α
-		ΔM = -2*m.σ[i,j]
-        voltea_espin!(m, i, j)
-        return ΔE, ΔM
-    else
-        return 0., 0.
+		# El parámetro de aceptación
+		α = min(1., e^(-β*ΔE))
+
+		if rand() < α
+			aceptado = true
+			ΔM = -2*m.σ[i,j]
+			voltea_espin!(m, i, j)
+			return ΔE, ΔM
+		end
     end
 end
 
@@ -75,37 +77,7 @@ end
 # 	m
 # end
 
-function montecarlo_energia(L::Int, T, num_pasos::Int)
-	β = 1/T
-	m = edo_aleatorio(L)
-
-	out = [energia_total(m)]
-    sizehint(out, num_pasos)
-
-    for i in 1:num_pasos-1
-        ΔE = paso_montecarlo(m, β)[1]
-        push!(out, out[i] + ΔE)
-    end
-
-    out
-end
-
 magnetizacion_total(m::MicroEstado) = sum(m.σ)
-
-function montecarlo_magnetizacion(L::Int, T, num_pasos::Int)
-    β = 1/T
-	m = edo_aleatorio(L)
-
-    out = [magnetizacion_total(m)]
-    sizehint(out, num_pasos)
-
-    for i in 1:num_pasos-1
-        ΔM = paso_montecarlo(m, β)[2]
-        push!(out, out[i] + ΔM)
-    end
-
-    out
-end
 
 function simulacion_montecarlo(L::Int, T, num_pasos::Int)
 	β = 1/T
@@ -117,7 +89,7 @@ function simulacion_montecarlo(L::Int, T, num_pasos::Int)
 	mag[1] = magnetizacion_total(m)
 
 	for i in 1:num_pasos-1
-		ΔE, ΔM = paso_montecarlo(m, β)
+		ΔE, ΔM = paso_montecarlo!(m, β)
 		ener[i+1] = ener[i] + ΔE
 		mag[i+1] = mag[i] + ΔM
 	end
@@ -125,24 +97,19 @@ function simulacion_montecarlo(L::Int, T, num_pasos::Int)
 	ener, mag
 end
 
-# function microestados(n :: Int64, m :: Int64)
-#     N=n*m
-#     if N>16 return 0 end
-#     N2=big(2)^N
-#     out=zeros(N2,N)
-#     for i in 1:N2-1
-#         bini=bin(i)
-#         out[i+1,N-length(bini)+1:N]=(int(split(bini,"")).*2)-1
-#     end
-#     out
-# end
+function microEstados_montecarlo(L::Int, T, num_pasos::Int)
+	β = 1/T
+	m = edo_aleatorio(L)
 
-# function particion_T(T :: Float64, configuraciones :: Array{Float64,2}, n :: Int64, m :: Int64)
-#     out=0.0
-#     for i in length(configuraciones[:,1])
-#         out+=e^(-energia_total(configuraciones[i,:],n,m)/T)
-#     end
-#     out
-# end
+	out = Array{Int,2}[copy(m.σ)]
+	sizehint(out, num_pasos)
+
+	for i in 1:num_pasos-1
+		paso_montecarlo!(m, β)
+		push!(out, copy(m.σ))
+	end
+
+	out
+end
 
 end
