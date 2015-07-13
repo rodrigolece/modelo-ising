@@ -71,7 +71,7 @@ end
 # 	m = edo_aleatorio(L)
 
 # 	for i in 1:num_pasos-1
-# 		paso_montecarlo(m,β)
+# 		paso_montecarlo!(m,β)
 # 	end
 
 # 	m
